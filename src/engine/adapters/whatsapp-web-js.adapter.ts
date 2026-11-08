@@ -86,6 +86,10 @@ export interface WhatsAppWebJsConfig {
     executablePath?: string;
     /** Per-CDP-command budget handed to Puppeteer. Must be positive — see wwebjs-lifecycle. */
     protocolTimeoutMs?: number;
+    /** Attach to an already-running Chromium browser using Chrome DevTools Protocol. */
+    browserWSEndpoint?: string;
+    /** Alternative HTTP debugging URL for an already-running Chromium browser. */
+    browserURL?: string;
   };
   // Phase 3: Proxy per session
   proxy?: {
