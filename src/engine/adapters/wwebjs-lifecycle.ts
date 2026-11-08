@@ -565,10 +565,13 @@ export class WwebjsLifecycle {
       : {
           headless: this.host.config.puppeteer?.headless ?? true,
           args: puppeteerArgs,
-          // OpenWA owns signal handling for browsers it launches.
+          // Do NOT let Puppeteer install its own process signal handlers. OpenWA owns
+          // SIGINT/SIGTERM/SIGHUP so it can drain sessions before shutting down.
           handleSIGINT: false,
           handleSIGTERM: false,
           handleSIGHUP: false,
+          // Only override the executable when explicitly configured; otherwise let
+          // whatsapp-web.js fall back to Puppeteer's bundled Chromium.
           ...(this.host.config.puppeteer?.executablePath
             ? { executablePath: this.host.config.puppeteer.executablePath }
             : {}),
@@ -593,15 +596,18 @@ export class WwebjsLifecycle {
       this.setStatus(EngineStatus.DISCONNECTED);
       return;
     }
-    // Kill any Chromium that survived a hard kill of a previous OpenWA process lifetime (its
-    // Puppeteer exit hook never ran, leaving an orphaned browser holding the profile). Safe here:
-    // this runs before this attempt's browser exists, so the only thing it can kill is an orphan —
-    // including attempt 1's browser when the bounded inter-attempt destroy did not finish it.
-    await killOrphanedChromiumProcesses(this.host.config.sessionId, this.host.logger);
-    // Clear stale Chromium Singleton* files left by a hard kill before launching — see
-    // removeStaleSingletonFiles. This runs after the orphan kill above and before this attempt's
-    // browser exists, so it cannot pull the files out from under a running Chromium.
-    await removeStaleSingletonFiles(this.host.config.sessionId, this.host.config.sessionDataPath, this.host.logger);
+    if (!connectedBrowser) {
+      // These sweeps apply only to Chromium profiles owned by OpenWA. In CDP connect mode the
+      // browser and its profile belong to the operator; never scan/kill it or clean profile files.
+      // Kill any Chromium that survived a hard kill of a previous OpenWA process lifetime.
+      await killOrphanedChromiumProcesses(this.host.config.sessionId, this.host.logger);
+      // Clear stale Singleton* files from this session's LocalAuth profile before launching.
+      await removeStaleSingletonFiles(
+        this.host.config.sessionId,
+        this.host.config.sessionDataPath,
+        this.host.logger,
+      );
+    }
     if (this.tearingDown) return;
     this.launching = client;
     try {
