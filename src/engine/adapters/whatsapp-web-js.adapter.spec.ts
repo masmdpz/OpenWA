@@ -7201,6 +7201,19 @@ describe('WhatsAppWebJsAdapter stale Singleton cleanup (pre-launch)', () => {
     expect(rmSpy).toHaveBeenCalledTimes(3); // all three attempted even though each failed
     expect(clientInitSpy).toHaveBeenCalledTimes(1);
   });
+
+  it('does not clean an OpenWA LocalAuth profile when attaching to an operator-owned browser', async () => {
+    const adapter = new WhatsAppWebJsAdapter({
+      sessionId: SESSION_ID,
+      sessionDataPath: './data/sessions',
+      puppeteer: { browserURL: 'http://127.0.0.1:9222' },
+    });
+
+    await adapter.initialize({});
+
+    expect(rmSpy).not.toHaveBeenCalled();
+    expect(clientInitSpy).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('WhatsAppWebJsAdapter orphaned Chromium sweep (pre-launch)', () => {
@@ -7430,6 +7443,25 @@ describe('WhatsAppWebJsAdapter orphaned Chromium sweep (pre-launch)', () => {
 
     expect(killSpy).not.toHaveBeenCalled();
     expect(clientInitSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not inspect or kill Chromium processes when attaching to an operator-owned browser', async () => {
+    const adapter = new WhatsAppWebJsAdapter({
+      sessionId: SESSION_ID,
+      sessionDataPath: './data/sessions',
+      puppeteer: { browserURL: 'http://127.0.0.1:9222' },
+    });
+
+    await adapter.initialize({});
+
+    expect(execFileSpy).not.toHaveBeenCalled();
+    expect(killSpy).not.toHaveBeenCalled();
+    expect(rmSpy).not.toHaveBeenCalled();
+    expect(clientInitSpy).toHaveBeenCalledTimes(1);
+    const client = (adapter as unknown as { client: { options: { puppeteer?: { browserURL?: string; args?: string[] } } } })
+      .client;
+    expect(client.options.puppeteer?.browserURL).toBe('http://127.0.0.1:9222');
+    expect(client.options.puppeteer?.args).toBeUndefined();
   });
 
   it('runs the orphan sweep before the Singleton cleanup and client.initialize()', async () => {
