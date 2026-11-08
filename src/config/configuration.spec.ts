@@ -91,6 +91,32 @@ describe('configuration — Puppeteer args delimiter', () => {
   });
 });
 
+describe('configuration — shared browser CDP endpoint', () => {
+  const originalURL = process.env.PUPPETEER_BROWSER_URL;
+  const originalWSEndpoint = process.env.PUPPETEER_BROWSER_WS_ENDPOINT;
+
+  afterEach(() => {
+    if (originalURL === undefined) delete process.env.PUPPETEER_BROWSER_URL;
+    else process.env.PUPPETEER_BROWSER_URL = originalURL;
+    if (originalWSEndpoint === undefined) delete process.env.PUPPETEER_BROWSER_WS_ENDPOINT;
+    else process.env.PUPPETEER_BROWSER_WS_ENDPOINT = originalWSEndpoint;
+  });
+
+  it('reads and trims the HTTP browser debugging URL', () => {
+    delete process.env.PUPPETEER_BROWSER_WS_ENDPOINT;
+    process.env.PUPPETEER_BROWSER_URL = ' http://127.0.0.1:9222 ';
+    expect(configuration().engine.puppeteer.browserURL).toBe('http://127.0.0.1:9222');
+    expect(configuration().engine.puppeteer.browserWSEndpoint).toBeUndefined();
+  });
+
+  it('reads and trims a WebSocket browser endpoint', () => {
+    delete process.env.PUPPETEER_BROWSER_URL;
+    process.env.PUPPETEER_BROWSER_WS_ENDPOINT = ' ws://127.0.0.1:9222/devtools/browser/id ';
+    expect(configuration().engine.puppeteer.browserWSEndpoint).toBe('ws://127.0.0.1:9222/devtools/browser/id');
+    expect(configuration().engine.puppeteer.browserURL).toBeUndefined();
+  });
+});
+
 describe('configuration — Postgres pool timeouts', () => {
   const keys = ['DATABASE_STATEMENT_TIMEOUT_MS', 'DATABASE_IDLE_TIMEOUT_MS', 'DATABASE_CONNECTION_TIMEOUT_MS'];
   const orig: Record<string, string | undefined> = {};
