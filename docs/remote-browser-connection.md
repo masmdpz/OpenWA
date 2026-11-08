@@ -32,7 +32,7 @@ PUPPETEER_BROWSER_URL=http://127.0.0.1:9222
 PUPPETEER_BROWSER_WS_ENDPOINT=ws://127.0.0.1:9222/devtools/browser/...
 ```
 
-Docker Compose forwards both variables. The Infrastructure page does not expose the CDP endpoint because a WebSocket endpoint can act as a bearer capability for the whole browser; configure it through a protected server environment or secret store. The browser must be reachable from the OpenWA process. When CDP connect mode is selected, OpenWA does not launch Chromium and does not create a separate LocalAuth profile; WhatsApp Web storage comes from the connected browser profile.
+Docker Compose forwards both variables. With Helm, put the non-secret `PUPPETEER_BROWSER_URL` in the chart's `env` map; put `PUPPETEER_BROWSER_WS_ENDPOINT` in an externally managed Secret referenced by `existingSecret`, not directly in Helm values. The Infrastructure page does not expose the CDP endpoint because a WebSocket endpoint can act as a bearer capability for the whole browser; configure it through a protected server environment or secret store. The browser must be reachable from the OpenWA process. When CDP connect mode is selected, OpenWA does not launch Chromium and does not create a separate LocalAuth profile; WhatsApp Web storage comes from the connected browser profile.
 
 ### Browser setup and deployment topology
 
