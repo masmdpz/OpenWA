@@ -7140,6 +7140,49 @@ describe('WhatsAppWebJsAdapter navigation re-inject grace (#1081)', () => {
 });
 
 describe('WhatsAppWebJsAdapter shared-browser ownership', () => {
+  it('does not SIGKILL the connected browser during force recovery', async () => {
+    const adapter = new WhatsAppWebJsAdapter({
+      sessionId: 'sess-shared-force',
+      sessionDataPath: './data/sessions',
+      puppeteer: { browserURL: 'http://127.0.0.1:9222' },
+    });
+    const client = new Client();
+    const kill = jest.fn();
+    const process = jest.fn().mockReturnValue({ kill });
+    const page = {
+      isClosed: jest.fn().mockReturnValue(false),
+      close: jest.fn().mockResolvedValue(undefined),
+    };
+    const browser = {
+      isConnected: jest.fn().mockReturnValue(true),
+      disconnect: jest.fn(),
+      close: jest.fn(),
+      process,
+    };
+    const handles = client as unknown as { pupPage: typeof page; pupBrowser: typeof browser };
+    handles.pupPage = page;
+    handles.pupBrowser = browser;
+
+    const lifecycle = (
+      adapter as unknown as {
+        lifecycle: {
+          client: Client | null;
+          preserveConnectedBrowserOwnership(client: Client): void;
+        };
+      }
+    ).lifecycle;
+    lifecycle.preserveConnectedBrowserOwnership(client);
+    lifecycle.client = client;
+
+    await adapter.forceDestroy();
+
+    expect(process).not.toHaveBeenCalled();
+    expect(kill).not.toHaveBeenCalled();
+    expect(page.close).toHaveBeenCalledTimes(1);
+    expect(browser.disconnect).toHaveBeenCalledTimes(1);
+    expect(browser.close).not.toHaveBeenCalled();
+  });
+
   it('closes only OpenWA-owned page and detaches CDP; shared-browser logout is rejected', async () => {
     const adapter = new WhatsAppWebJsAdapter({
       sessionId: 'sess-shared-browser',
