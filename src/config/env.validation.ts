@@ -160,6 +160,25 @@ export function validateEnv(config: EnvConfig): EnvConfig {
   };
   checkEnum('ENGINE_TYPE', ['whatsapp-web.js', 'baileys']);
   checkEnum('STORAGE_TYPE', ['local', 's3']);
+
+  // CDP endpoints are capabilities to control a logged-in browser, so reject typos and conflicting
+  // settings early without ever echoing the endpoint (a WebSocket URL may itself be a bearer secret).
+  const browserURL = str('PUPPETEER_BROWSER_URL');
+  const browserWSEndpoint = str('PUPPETEER_BROWSER_WS_ENDPOINT');
+  if (browserURL && browserWSEndpoint) {
+    errors.push('Configure only one of PUPPETEER_BROWSER_URL or PUPPETEER_BROWSER_WS_ENDPOINT');
+  }
+  const checkEndpointProtocol = (key: string, value: string | undefined, protocols: string[]): void => {
+    if (!value) return;
+    try {
+      const parsed = new URL(value);
+      if (!protocols.includes(parsed.protocol) || !parsed.hostname) throw new Error('invalid protocol or host');
+    } catch {
+      errors.push(`${key} must be a valid ${protocols.join(' or ')} URL`);
+    }
+  };
+  checkEndpointProtocol('PUPPETEER_BROWSER_URL', browserURL, ['http:', 'https:']);
+  checkEndpointProtocol('PUPPETEER_BROWSER_WS_ENDPOINT', browserWSEndpoint, ['ws:', 'wss:']);
   checkEnum('MESSAGE_INLINE_MEDIA', ['inline', 'archive']);
   // 'archive' drops the inline copy only after the archiver stored the file; with the archiver off
   // nothing is ever stored, so the mode would silently do nothing. Refuse that rather than let an
