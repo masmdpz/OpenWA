@@ -107,6 +107,26 @@ describe('validateEnv', () => {
     expect(() => validateEnv({ ENGINE_TYPE: 'baileys' })).not.toThrow();
   });
 
+  it('validates shared browser CDP endpoints and rejects ambiguous configuration', () => {
+    expect(() => validateEnv({ PUPPETEER_BROWSER_URL: 'http://127.0.0.1:9222' })).not.toThrow();
+    expect(() =>
+      validateEnv({ PUPPETEER_BROWSER_WS_ENDPOINT: 'ws://127.0.0.1:9222/devtools/browser/id' }),
+    ).not.toThrow();
+    expect(() =>
+      validateEnv({
+        PUPPETEER_BROWSER_URL: 'http://127.0.0.1:9222',
+        PUPPETEER_BROWSER_WS_ENDPOINT: 'ws://127.0.0.1:9222/devtools/browser/id',
+      }),
+    ).toThrow(/Configure only one/);
+    expect(() => validateEnv({ PUPPETEER_BROWSER_URL: 'ws://127.0.0.1:9222/devtools/browser/id' })).toThrow(
+      /PUPPETEER_BROWSER_URL/,
+    );
+    expect(() => validateEnv({ PUPPETEER_BROWSER_WS_ENDPOINT: 'http://127.0.0.1:9222' })).toThrow(
+      /PUPPETEER_BROWSER_WS_ENDPOINT/,
+    );
+    expect(() => validateEnv({ PUPPETEER_BROWSER_URL: 'not-a-url' })).toThrow(/PUPPETEER_BROWSER_URL/);
+  });
+
   it('rejects a STORAGE_TYPE typo instead of silently falling back to local', () => {
     expect(() => validateEnv({ STORAGE_TYPE: 'ss' })).toThrow(/STORAGE_TYPE/);
     expect(() => validateEnv({ STORAGE_TYPE: 'local' })).not.toThrow();
