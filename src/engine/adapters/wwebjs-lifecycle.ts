@@ -666,14 +666,14 @@ export class WwebjsLifecycle {
     );
   }
 
-/**
+  /**
    * In CDP connect mode the browser belongs to the operator, not this OpenWA process.
    * whatsapp-web.js normally closes the whole Browser in destroy()/logout(); replace those
-   * teardown methods so disconnect closes only the page OpenWA created and detaches CDP.
+   * teardown methods so disconnect closes only the page OpenWA created and detaches from CDP.
    * Logout is intentionally rejected in borrowed-browser mode: unlink the companion from
    * WhatsApp's Linked Devices UI instead of risking closure of the shared browser.
    */
-    private preserveConnectedBrowserOwnership(client: Client): void {
+  private preserveConnectedBrowserOwnership(client: Client): void {
     type BorrowedClient = {
       pupBrowser?: { isConnected?: () => boolean; disconnect?: () => Promise<void> | void };
       pupPage?: { isClosed?: () => boolean; close?: () => Promise<void> };
