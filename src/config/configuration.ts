@@ -252,6 +252,9 @@ export default () => ({
         const n = parseInt(process.env.PUPPETEER_PROTOCOL_TIMEOUT_MS || '', 10);
         return Number.isFinite(n) && n > 0 && n <= MAX_TIMER_MS ? n : undefined;
       })(),
+      // CDP connect mode borrows an operator-owned browser/profile; use exactly one endpoint.
+      browserURL: process.env.PUPPETEER_BROWSER_URL?.trim() || undefined,
+      browserWSEndpoint: process.env.PUPPETEER_BROWSER_WS_ENDPOINT?.trim() || undefined,
     },
     sessionDataPath: process.env.SESSION_DATA_PATH || './data/sessions',
     // Baileys engine (used when ENGINE_TYPE=baileys). Multi-file auth state base dir; each session
