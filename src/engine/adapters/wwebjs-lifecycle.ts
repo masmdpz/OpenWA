@@ -1303,10 +1303,18 @@ export class WwebjsLifecycle {
 
     try {
       // pupBrowser is the Puppeteer Browser; .process() is the Chromium ChildProcess (null if already gone).
-      const proc = (
-        target as unknown as { pupBrowser?: { process?: () => { kill?: (sig: string) => void } | null } }
-      ).pupBrowser?.process?.();
-      proc?.kill?.('SIGKILL');
+      const connectedBrowser = Boolean(
+        this.host.config.puppeteer?.browserURL?.trim() ||
+          this.host.config.puppeteer?.browserWSEndpoint?.trim(),
+      );
+      // A CDP-connected browser belongs to the operator. Never SIGKILL its process during
+      // force-recovery; the patched destroy() below closes only OpenWA's page and detaches.
+      if (!connectedBrowser) {
+        const proc = (
+          target as unknown as { pupBrowser?: { process?: () => { kill?: (sig: string) => void } | null } }
+        ).pupBrowser?.process?.();
+        proc?.kill?.('SIGKILL');
+      }
     } catch (err) {
       this.host.logger.warn('forceDestroy: failed to kill the browser process', { error: String(err) });
     }
