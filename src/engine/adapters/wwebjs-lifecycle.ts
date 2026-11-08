@@ -536,46 +536,56 @@ export class WwebjsLifecycle {
       configuredProtocolTimeout <= MAX_TIMER_MS
         ? configuredProtocolTimeout
         : undefined;
-    const authStrategy = new LocalAuth({
-      clientId: this.host.config.sessionId,
-      dataPath: path.resolve(this.host.config.sessionDataPath),
-    });
-    // page.authenticate answers the proxy's login for the page only, and a service worker registered by an earlier
-    // start takes the page's requests out of its reach (#819).
-    if (proxyAuthentication) bypassServiceWorkerOnLaunch(authStrategy);
+    const browserWSEndpoint = this.host.config.puppeteer?.browserWSEndpoint?.trim();
+    const browserURL = this.host.config.puppeteer?.browserURL?.trim();
+    if (browserWSEndpoint && browserURL) {
+      throw new Error('Configure only one of puppeteer.browserWSEndpoint or puppeteer.browserURL.');
+    }
+    const connectedBrowser = Boolean(browserWSEndpoint || browserURL);
+    if (connectedBrowser && (proxyAuthentication || this.host.config.proxy)) {
+      throw new Error(
+        'A connected browser uses its own network settings; configure any proxy on that browser instead of the OpenWA session.',
+      );
+    }
+    // A connected browser already owns the profile and WhatsApp Web storage. Do not create
+    // a second LocalAuth profile for it; whatsapp-web.js defaults to NoAuth when omitted.
+    const authStrategy = connectedBrowser
+      ? undefined
+      : new LocalAuth({
+          clientId: this.host.config.sessionId,
+          dataPath: path.resolve(this.host.config.sessionDataPath),
+        });
+    if (proxyAuthentication && authStrategy) bypassServiceWorkerOnLaunch(authStrategy);
+    const puppeteerOptions = (connectedBrowser
+      ? {
+          ...(browserWSEndpoint ? { browserWSEndpoint } : {}),
+          ...(browserURL ? { browserURL } : {}),
+          ...(protocolTimeout !== undefined ? { protocolTimeout } : {}),
+        }
+      : {
+          headless: this.host.config.puppeteer?.headless ?? true,
+          args: puppeteerArgs,
+          // OpenWA owns signal handling for browsers it launches.
+          handleSIGINT: false,
+          handleSIGTERM: false,
+          handleSIGHUP: false,
+          ...(this.host.config.puppeteer?.executablePath
+            ? { executablePath: this.host.config.puppeteer.executablePath }
+            : {}),
+          ...(protocolTimeout !== undefined ? { protocolTimeout } : {}),
+        }) as NonNullable<ConstructorParameters<typeof Client>[0]['puppeteer']> & {
+      browserWSEndpoint?: string;
+      browserURL?: string;
+    };
     const client = new Client({
-      authStrategy,
-      puppeteer: {
-        headless: this.host.config.puppeteer?.headless ?? true,
-        args: puppeteerArgs,
-        // Do NOT let Puppeteer install its own process signal handlers. By default it handles
-        // SIGINT (→ synchronous process.exit(130), which would skip the graceful drain entirely)
-        // and SIGTERM/SIGHUP (→ kills Chromium at signal time, defeating the drain window). We own
-        // signal handling in main.ts. Puppeteer's unconditional `exit` hook still SIGKILLs this
-        // browser when the process actually exits, so nothing is orphaned.
-        handleSIGINT: false,
-        handleSIGTERM: false,
-        handleSIGHUP: false,
-        // Only override the executable when explicitly configured; otherwise let
-        // whatsapp-web.js fall back to Puppeteer's bundled Chromium.
-        ...(this.host.config.puppeteer?.executablePath
-          ? { executablePath: this.host.config.puppeteer.executablePath }
-          : {}),
-        // Per-CDP-command budget, spread only when the host configured a usable one (see above).
-        // Absent, puppeteer-core nullish-coalesces to its own 180 000 ms (`cdp/Connection.js`).
-        ...(protocolTimeout !== undefined ? { protocolTimeout } : {}),
-      },
+      ...(authStrategy ? { authStrategy } : {}),
+      puppeteer: puppeteerOptions,
       ...(authTimeoutMs !== undefined ? { authTimeoutMs } : {}),
       ...(proxyAuthentication ? { proxyAuthentication } : {}),
-      // Unpinned, whatsapp-web.js defaults to a local HTML cache at the cwd-relative
-      // './.wwebjs_cache/' and writes it after the link, before `ready`. The image's /app is not
-      // writable (root-owned, read-only in compose and Helm), so that write throws and the session
-      // never reaches ready. 'none' caches nothing and serves WhatsApp's live build. A pin is a
-      // strict local cache under SESSION_DATA_PATH (see resolveWebVersionPin), which the library
-      // only reads: it persists nothing when the cache served the page.
       ...(versionPin ?? { webVersionCache: { type: 'none' as const } }),
     });
     this.client = client;
+    if (connectedBrowser) this.preserveConnectedBrowserOwnership(client);
 
     this.setupEventHandlers();
     if (this.tearingDown) {
@@ -611,6 +621,37 @@ export class WwebjsLifecycle {
     // browser leaves the client looking READY forever ("silent death"). Attach death listeners
     // to the puppeteer handles so a dead browser surfaces as a normal disconnect → reconnect.
     this.attachPuppeteerLifecycleListeners();
+  }
+
+  /**
+   * In CDP connect mode the browser belongs to the operator, not this OpenWA process.
+   * whatsapp-web.js normally closes the whole Browser in destroy()/logout(); replace those
+   * teardown methods so disconnect closes only the page OpenWA created and detaches CDP.
+   * Logout is intentionally rejected in borrowed-browser mode: unlink the companion from
+   * WhatsApp's Linked Devices UI instead of risking closure of the shared browser.
+   */
+  private preserveConnectedBrowserOwnership(client: Client): void {
+    type BorrowedClient = {
+      pupBrowser?: { connected?: boolean; disconnect?: () => void };
+      pupPage?: { isClosed?: () => boolean; close?: () => Promise<void> };
+      authStrategy?: { destroy?: () => Promise<void> };
+      destroy: () => Promise<void>;
+      logout: () => Promise<void>;
+    };
+    const borrowed = client as unknown as BorrowedClient;
+    borrowed.destroy = async (): Promise<void> => {
+      const page = borrowed.pupPage;
+      if (page && page.isClosed?.() !== true) {
+        await page.close?.().catch(() => undefined);
+      }
+      if (borrowed.pupBrowser?.connected !== false) borrowed.pupBrowser?.disconnect?.();
+      await borrowed.authStrategy?.destroy?.();
+    };
+    borrowed.logout = async (): Promise<void> => {
+      throw new Error(
+        'Logout is disabled while using a shared browser. Unlink this device from WhatsApp > Linked Devices.',
+      );
+    };
   }
 
   /**
