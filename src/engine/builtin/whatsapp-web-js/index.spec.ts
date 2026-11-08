@@ -26,6 +26,7 @@ describe('WhatsAppWebJsPlugin.createEngine (opaque config)', () => {
         args: ['--single-process'],
         executablePath: '/usr/bin/chromium',
         protocolTimeoutMs: 300_000,
+        browserURL: 'http://127.0.0.1:9222',
       },
     });
 
@@ -42,6 +43,7 @@ describe('WhatsAppWebJsPlugin.createEngine (opaque config)', () => {
           args: ['--single-process'],
           executablePath: '/usr/bin/chromium',
           protocolTimeoutMs: 300_000,
+          browserURL: 'http://127.0.0.1:9222',
         },
         proxy: { url: 'http://p', type: 'http' },
       }),
