@@ -34,6 +34,18 @@ PUPPETEER_BROWSER_WS_ENDPOINT=ws://127.0.0.1:9222/devtools/browser/...
 
 Docker Compose forwards both variables. The Infrastructure page does not expose the CDP endpoint because a WebSocket endpoint can act as a bearer capability for the whole browser; configure it through a protected server environment or secret store. The browser must be reachable from the OpenWA process. When CDP connect mode is selected, OpenWA does not launch Chromium and does not create a separate LocalAuth profile; WhatsApp Web storage comes from the connected browser profile.
 
+### Browser setup and deployment topology
+
+The browser process must have CDP enabled when it starts. For a dedicated Chrome/Chromium profile, launch the browser with a remote debugging port and a persistent user-data directory, for example:
+
+```bash
+google-chrome --remote-debugging-port=9222 --user-data-dir=/path/to/openwa-profile
+```
+
+Open WhatsApp Web in that profile and complete its normal login once. Keep that browser process running while OpenWA connects. The profile must be a regular persistent browser context, not an incognito window. OpenWA opens another tab in that same browser profile; it does not adopt the already-visible tab.
+
+If OpenWA runs in Docker, a cloud container, or a Hugging Face Space while Chrome runs on a different device, `127.0.0.1` points to the OpenWA container—not the other device. Use a private network or authenticated tunnel so the OpenWA process can reach the browser's CDP endpoint. Do not publish port 9222 directly to the internet. A normal Chrome instance started without remote debugging cannot be attached retroactively; restart a browser process with CDP enabled and the profile you intend to use.
+
 ## Important limitations
 
 - This connects to a browser on a machine/container that OpenWA can reach. It does not import a pairing code from a separate phone browser.
