@@ -7140,6 +7140,63 @@ describe('WhatsAppWebJsAdapter navigation re-inject grace (#1081)', () => {
 });
 
 describe('WhatsAppWebJsAdapter shared-browser ownership', () => {
+  it('redacts a private CDP endpoint and waits for the borrowed browser detach to finish', async () => {
+    const endpoint = 'ws://127.0.0.1:9222/devtools/browser/private-token';
+    const adapter = new WhatsAppWebJsAdapter({
+      sessionId: 'sess-shared-redaction',
+      sessionDataPath: './data/sessions',
+      puppeteer: { browserWSEndpoint: endpoint },
+    });
+    const client = new Client();
+    let finishDisconnect: () => void = () => undefined;
+    const disconnect = jest.fn(
+      () =>
+        new Promise<void>(resolve => {
+          finishDisconnect = resolve;
+        }),
+    );
+    const page = {
+      isClosed: jest.fn().mockReturnValue(false),
+      close: jest.fn().mockResolvedValue(undefined),
+    };
+    const browser = {
+      isConnected: jest.fn().mockReturnValue(true),
+      disconnect,
+      close: jest.fn(),
+    };
+    const handles = client as unknown as { pupPage: typeof page; pupBrowser: typeof browser };
+    handles.pupPage = page;
+    handles.pupBrowser = browser;
+
+    const lifecycle = (
+      adapter as unknown as {
+        lifecycle: {
+          preserveConnectedBrowserOwnership(client: Client): void;
+          redactConnectedBrowserEndpoint(message: string): string;
+        };
+      }
+    ).lifecycle;
+
+    expect(lifecycle.redactConnectedBrowserEndpoint(`Unable to connect to ${endpoint}`)).toBe(
+      'Unable to connect to [redacted CDP endpoint]',
+    );
+
+    lifecycle.preserveConnectedBrowserOwnership(client);
+    let destroyFinished = false;
+    const destroyPromise = client.destroy().then(() => {
+      destroyFinished = true;
+    });
+
+    await Promise.resolve();
+    expect(disconnect).toHaveBeenCalledTimes(1);
+    expect(destroyFinished).toBe(false);
+
+    finishDisconnect();
+    await destroyPromise;
+    expect(destroyFinished).toBe(true);
+    expect(browser.close).not.toHaveBeenCalled();
+  });
+
   it('does not SIGKILL the connected browser during force recovery', async () => {
     const adapter = new WhatsAppWebJsAdapter({
       sessionId: 'sess-shared-force',
