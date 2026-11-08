@@ -49,7 +49,14 @@ export class WhatsAppWebJsPlugin implements IEnginePlugin {
     // the factory hardens and purges, which wins over context.config.
     const engineConfig = (this.context?.config ?? this.registeredConfig ?? {}) as {
       sessionDataPath?: string;
-      puppeteer?: { headless?: boolean; args?: string[]; executablePath?: string; protocolTimeoutMs?: number };
+      puppeteer?: {
+        headless?: boolean;
+        args?: string[];
+        executablePath?: string;
+        protocolTimeoutMs?: number;
+        browserWSEndpoint?: string;
+        browserURL?: string;
+      };
     };
     const puppeteer = engineConfig.puppeteer ?? {};
     const sessionDataPath =
@@ -60,6 +67,8 @@ export class WhatsAppWebJsPlugin implements IEnginePlugin {
     const puppeteerArgs = puppeteer.args;
     const executablePath = puppeteer.executablePath;
     const protocolTimeoutMs = puppeteer.protocolTimeoutMs;
+    const browserWSEndpoint = puppeteer.browserWSEndpoint;
+    const browserURL = puppeteer.browserURL;
 
     return new WhatsAppWebJsAdapter({
       sessionId,
@@ -69,6 +78,8 @@ export class WhatsAppWebJsPlugin implements IEnginePlugin {
         args: puppeteerArgs,
         executablePath,
         protocolTimeoutMs,
+        ...(browserWSEndpoint ? { browserWSEndpoint } : {}),
+        ...(browserURL ? { browserURL } : {}),
       },
       proxy: proxyUrl
         ? {
