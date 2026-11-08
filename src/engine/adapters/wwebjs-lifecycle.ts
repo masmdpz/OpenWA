@@ -638,7 +638,7 @@ export class WwebjsLifecycle {
    */
   private preserveConnectedBrowserOwnership(client: Client): void {
     type BorrowedClient = {
-      pupBrowser?: { connected?: boolean; disconnect?: () => void };
+      pupBrowser?: { isConnected?: () => boolean; disconnect?: () => void };
       pupPage?: { isClosed?: () => boolean; close?: () => Promise<void> };
       authStrategy?: { destroy?: () => Promise<void> };
       destroy: () => Promise<void>;
@@ -650,7 +650,7 @@ export class WwebjsLifecycle {
       if (page && page.isClosed?.() !== true) {
         await page.close?.().catch(() => undefined);
       }
-      if (borrowed.pupBrowser?.connected !== false) borrowed.pupBrowser?.disconnect?.();
+      if (borrowed.pupBrowser?.isConnected?.() !== false) borrowed.pupBrowser?.disconnect?.();
       await borrowed.authStrategy?.destroy?.();
     };
     borrowed.logout = async (): Promise<void> => {
