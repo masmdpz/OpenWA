@@ -437,6 +437,7 @@ export class WwebjsLifecycle {
         await this.runInitAttempt(puppeteerArgs, authTimeoutMs, proxyAuthentication, versionPin);
       } catch (attemptError) {
         const attemptReason = attemptError instanceof Error ? attemptError.message : String(attemptError);
+        const safeAttemptReason = this.redactConnectedBrowserEndpoint(attemptReason);
         const budgetLeftMs = resolveEngineInitTimeoutMs() - (Date.now() - initStartedAt);
         if (
           this.tearingDown ||
@@ -446,7 +447,7 @@ export class WwebjsLifecycle {
           throw attemptError;
         }
         this.host.logger.warn(
-          `"${attemptReason}" killed the first inject — a page navigation landed before ` +
+          `"${safeAttemptReason}" killed the first inject — a page navigation landed before ` +
             `whatsapp-web.js installed its re-inject handler. Retrying the launch once (#1081).`,
           { sessionId: this.host.config.sessionId, action: 'init_navigation_retry' },
         );
@@ -473,12 +474,23 @@ export class WwebjsLifecycle {
         return;
       }
       this.setStatus(EngineStatus.FAILED);
-      const reason = error instanceof Error ? error.message : String(error);
+      const rawReason = error instanceof Error ? error.message : String(error);
+      // A CDP WebSocket URL can carry a bearer token for the whole browser. Never put the configured
+      // endpoint into logs, dashboard errors, or an exception that can be logged by an outer layer.
+      const reason = this.redactConnectedBrowserEndpoint(rawReason);
       // What the dashboard renders as `lastError` is exactly this string and nothing else — the log
       // below never reaches it. Carry a one-line remedy with the reason for the one failure we can
       // actually advise on, so the session card stops being a dead end (#1081).
       let surfacedReason = reason;
-      if (isExecutionContextDestroyedError(reason)) {
+      if (isExecutionContextDestroyedError(reason) && this.isConnectedBrowserConfigured()) {
+        this.host.logger.warn(
+          `"${reason}" during initialize while attached to an operator-owned browser. Check that the ` +
+            'browser is still running and its WhatsApp Web page has finished loading; do not delete the shared profile.',
+        );
+        surfacedReason =
+          `${reason} The connected browser page changed or reloaded during initialization. ` +
+          'Keep the browser profile; verify the CDP connection and retry.';
+      } else if (isExecutionContextDestroyedError(reason)) {
         // #708: Puppeteer's "Execution context was destroyed" during inject reads like a Puppeteer bug.
         // During initialize() its dominant cause is a browser profile left stale by an upgrade that
         // changed the Chromium/Chrome binary (e.g. v0.8.12 amd64: Debian Chromium → Chrome for Testing,
@@ -506,6 +518,11 @@ export class WwebjsLifecycle {
       if (socksCredentialsDropped && PROXY_REFUSAL_REASON.test(reason))
         surfacedReason += ` ${SOCKS_CREDENTIALS_ADVICE}`;
       this.host.getCallbacks().onError?.(surfacedReason);
+      if (reason !== rawReason) {
+        const safeError = new Error(reason);
+        if (error instanceof Error) safeError.name = error.name;
+        throw safeError;
+      }
       throw error;
     }
   }
@@ -636,9 +653,29 @@ export class WwebjsLifecycle {
    * Logout is intentionally rejected in borrowed-browser mode: unlink the companion from
    * WhatsApp's Linked Devices UI instead of risking closure of the shared browser.
    */
+  /** Whether this adapter is attached to an operator-owned browser via CDP. */
+  private isConnectedBrowserConfigured(): boolean {
+    return Boolean(
+      this.host.config.puppeteer?.browserURL?.trim() ||
+        this.host.config.puppeteer?.browserWSEndpoint?.trim(),
+    );
+  }
+
+  /** Remove a configured CDP endpoint from error text before it reaches logs or API responses. */
+  private redactConnectedBrowserEndpoint(message: string): string {
+    const endpoints = [
+      this.host.config.puppeteer?.browserURL?.trim(),
+      this.host.config.puppeteer?.browserWSEndpoint?.trim(),
+    ].filter((endpoint): endpoint is string => Boolean(endpoint));
+    return endpoints.reduce(
+      (safeMessage, endpoint) => safeMessage.split(endpoint).join('[redacted CDP endpoint]'),
+      message,
+    );
+  }
+
   private preserveConnectedBrowserOwnership(client: Client): void {
     type BorrowedClient = {
-      pupBrowser?: { isConnected?: () => boolean; disconnect?: () => void };
+      pupBrowser?: { isConnected?: () => boolean; disconnect?: () => Promise<void> | void };
       pupPage?: { isClosed?: () => boolean; close?: () => Promise<void> };
       authStrategy?: { destroy?: () => Promise<void> };
       destroy: () => Promise<void>;
@@ -650,8 +687,19 @@ export class WwebjsLifecycle {
       if (page && page.isClosed?.() !== true) {
         await page.close?.().catch(() => undefined);
       }
-      if (borrowed.pupBrowser?.isConnected?.() !== false) borrowed.pupBrowser?.disconnect?.();
-      await borrowed.authStrategy?.destroy?.();
+      try {
+        if (borrowed.pupBrowser?.isConnected?.() !== false) {
+          await borrowed.pupBrowser?.disconnect?.();
+        }
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : String(error);
+        this.host.logger.warn('Failed to detach from the shared browser CDP connection', {
+          sessionId: this.host.config.sessionId,
+          error: this.redactConnectedBrowserEndpoint(reason),
+        });
+      } finally {
+        await borrowed.authStrategy?.destroy?.();
+      }
     };
     borrowed.logout = async (): Promise<void> => {
       throw new Error(
