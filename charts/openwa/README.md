@@ -36,6 +36,12 @@ helm install openwa ./charts/openwa \
 
 Or bring your own Secret: `--set existingSecret=my-openwa-secret`.
 
+For a shared Chromium browser, set the non-secret address in `env` (for example
+`PUPPETEER_BROWSER_URL`). Treat `PUPPETEER_BROWSER_WS_ENDPOINT` as a secret: put
+that key in an externally managed Secret referenced by `existingSecret`, rather
+than storing the full CDP endpoint in Helm values. CDP grants browser control, so
+keep the endpoint reachable only over a private, authenticated network.
+
 The container port is fixed at 2785; do not set PORT in env (probes and the
 Service targetPort are pinned to it) — service.port changes the Service port.
 
