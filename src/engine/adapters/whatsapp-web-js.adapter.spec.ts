@@ -7380,7 +7380,10 @@ describe('WhatsAppWebJsAdapter stale Singleton cleanup (pre-launch)', () => {
     const adapter = new WhatsAppWebJsAdapter({
       sessionId: SESSION_ID,
       sessionDataPath: './data/sessions',
-      puppeteer: { browserWSEndpoint: endpoint },
+      puppeteer: {
+        browserWSEndpoint: endpoint,
+        wsOptions: { headers: { 'CF-Access-Client-Id': 'service-id', 'CF-Access-Client-Secret': 'service-secret-value' } },
+      },
     });
 
     await adapter.initialize({});
@@ -7396,7 +7399,10 @@ describe('WhatsAppWebJsAdapter stale Singleton cleanup (pre-launch)', () => {
       }
     ).client;
     expect(client.options.authStrategy).toBeUndefined();
-    expect(client.options.puppeteer).toMatchObject({ browserWSEndpoint: endpoint });
+    expect(client.options.puppeteer).toMatchObject({
+      browserWSEndpoint: endpoint,
+      wsOptions: { headers: { 'CF-Access-Client-Id': 'service-id', 'CF-Access-Client-Secret': 'service-secret-value' } },
+    });
     expect(rmSpy).not.toHaveBeenCalled();
   });
 });
