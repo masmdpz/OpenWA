@@ -94,12 +94,15 @@ describe('configuration — Puppeteer args delimiter', () => {
 describe('configuration — shared browser CDP endpoint', () => {
   const originalURL = process.env.PUPPETEER_BROWSER_URL;
   const originalWSEndpoint = process.env.PUPPETEER_BROWSER_WS_ENDPOINT;
+  const originalHeaders = process.env.PUPPETEER_BROWSER_WS_HEADERS_JSON;
 
   afterEach(() => {
     if (originalURL === undefined) delete process.env.PUPPETEER_BROWSER_URL;
     else process.env.PUPPETEER_BROWSER_URL = originalURL;
     if (originalWSEndpoint === undefined) delete process.env.PUPPETEER_BROWSER_WS_ENDPOINT;
     else process.env.PUPPETEER_BROWSER_WS_ENDPOINT = originalWSEndpoint;
+    if (originalHeaders === undefined) delete process.env.PUPPETEER_BROWSER_WS_HEADERS_JSON;
+    else process.env.PUPPETEER_BROWSER_WS_HEADERS_JSON = originalHeaders;
   });
 
   it('reads and trims the HTTP browser debugging URL', () => {
@@ -114,6 +117,20 @@ describe('configuration — shared browser CDP endpoint', () => {
     process.env.PUPPETEER_BROWSER_WS_ENDPOINT = ' ws://127.0.0.1:9222/devtools/browser/id ';
     expect(configuration().engine.puppeteer.browserWSEndpoint).toBe('ws://127.0.0.1:9222/devtools/browser/id');
     expect(configuration().engine.puppeteer.browserURL).toBeUndefined();
+  });
+
+  it('parses authenticated WebSocket headers for a remote CDP endpoint', () => {
+    delete process.env.PUPPETEER_BROWSER_URL;
+    process.env.PUPPETEER_BROWSER_WS_ENDPOINT = ' wss://cdp.example.com/devtools/browser/id ';
+    process.env.PUPPETEER_BROWSER_WS_HEADERS_JSON =
+      '{"CF-Access-Client-Id":"service-id","CF-Access-Client-Secret":"service-secret"}';
+
+    expect(configuration().engine.puppeteer.wsOptions).toEqual({
+      headers: {
+        'CF-Access-Client-Id': 'service-id',
+        'CF-Access-Client-Secret': 'service-secret',
+      },
+    });
   });
 });
 
