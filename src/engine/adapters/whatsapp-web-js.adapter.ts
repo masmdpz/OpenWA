@@ -90,6 +90,8 @@ export interface WhatsAppWebJsConfig {
     browserWSEndpoint?: string;
     /** Alternative HTTP debugging URL for an already-running Chromium browser. */
     browserURL?: string;
+    /** Additional headers for authenticated CDP WebSocket gateways. */
+    wsOptions?: { headers?: Record<string, string> };
   };
   // Phase 3: Proxy per session
   proxy?: {
