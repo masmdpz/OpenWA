@@ -642,8 +642,7 @@ export class WwebjsLifecycle {
   /** Whether this adapter is attached to an operator-owned browser via CDP. */
   private isConnectedBrowserConfigured(): boolean {
     return Boolean(
-      this.host.config.puppeteer?.browserURL?.trim() ||
-        this.host.config.puppeteer?.browserWSEndpoint?.trim(),
+      this.host.config.puppeteer?.browserURL?.trim() || this.host.config.puppeteer?.browserWSEndpoint?.trim(),
     );
   }
 
