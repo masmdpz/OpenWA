@@ -573,7 +573,7 @@ export class WwebjsLifecycle {
           dataPath: path.resolve(this.host.config.sessionDataPath),
         });
     if (proxyAuthentication && authStrategy) bypassServiceWorkerOnLaunch(authStrategy);
-    const puppeteerOptions = (connectedBrowser
+    const puppeteerOptions: Record<string, unknown> = connectedBrowser
       ? {
           ...(browserWSEndpoint ? { browserWSEndpoint } : {}),
           ...(browserURL ? { browserURL } : {}),
@@ -593,13 +593,10 @@ export class WwebjsLifecycle {
             ? { executablePath: this.host.config.puppeteer.executablePath }
             : {}),
           ...(protocolTimeout !== undefined ? { protocolTimeout } : {}),
-        }) as NonNullable<ConstructorParameters<typeof Client>[0]['puppeteer']> & {
-      browserWSEndpoint?: string;
-      browserURL?: string;
-    };
+        };
     const client = new Client({
       ...(authStrategy ? { authStrategy } : {}),
-      puppeteer: puppeteerOptions,
+      puppeteer: puppeteerOptions as unknown as NonNullable<ConstructorParameters<typeof Client>[0]['puppeteer']>,
       ...(authTimeoutMs !== undefined ? { authTimeoutMs } : {}),
       ...(proxyAuthentication ? { proxyAuthentication } : {}),
       ...(versionPin ?? { webVersionCache: { type: 'none' as const } }),
@@ -619,11 +616,7 @@ export class WwebjsLifecycle {
       // Kill any Chromium that survived a hard kill of a previous OpenWA process lifetime.
       await killOrphanedChromiumProcesses(this.host.config.sessionId, this.host.logger);
       // Clear stale Singleton* files from this session's LocalAuth profile before launching.
-      await removeStaleSingletonFiles(
-        this.host.config.sessionId,
-        this.host.config.sessionDataPath,
-        this.host.logger,
-      );
+      await removeStaleSingletonFiles(this.host.config.sessionId, this.host.config.sessionDataPath, this.host.logger);
     }
     if (this.tearingDown) return;
     this.launching = client;
@@ -648,10 +641,7 @@ export class WwebjsLifecycle {
 
   /** Whether this adapter is attached to an operator-owned browser via CDP. */
   private isConnectedBrowserConfigured(): boolean {
-    return Boolean(
-      this.host.config.puppeteer?.browserURL?.trim() ||
-        this.host.config.puppeteer?.browserWSEndpoint?.trim(),
-    );
+    return Boolean(this.host.config.puppeteer?.browserURL?.trim() || this.host.config.puppeteer?.browserWSEndpoint?.trim());
   }
 
   /** Remove a configured CDP endpoint from error text before it reaches logs or API responses. */
@@ -701,11 +691,12 @@ export class WwebjsLifecycle {
         await borrowed.authStrategy?.destroy?.();
       }
     };
-    borrowed.logout = async (): Promise<void> => {
-      throw new Error(
-        'Logout is disabled while using a shared browser. Unlink this device from WhatsApp > Linked Devices.',
+    borrowed.logout = (): Promise<void> =>
+      Promise.reject(
+        new Error(
+          'Logout is disabled while using a shared browser. Unlink this device from WhatsApp > Linked Devices.',
+        ),
       );
-    };
   }
 
   /**
@@ -1351,10 +1342,7 @@ export class WwebjsLifecycle {
 
     try {
       // pupBrowser is the Puppeteer Browser; .process() is the Chromium ChildProcess (null if already gone).
-      const connectedBrowser = Boolean(
-        this.host.config.puppeteer?.browserURL?.trim() ||
-          this.host.config.puppeteer?.browserWSEndpoint?.trim(),
-      );
+      const connectedBrowser = this.isConnectedBrowserConfigured();
       // A CDP-connected browser belongs to the operator. Never SIGKILL its process during
       // force-recovery; the patched destroy() below closes only OpenWA's page and detaches.
       if (!connectedBrowser) {
