@@ -41,7 +41,7 @@ PUPPETEER_BROWSER_URL=http://127.0.0.1:9222
 PUPPETEER_BROWSER_WS_ENDPOINT=ws://127.0.0.1:9222/devtools/browser/...
 ```
 
-Docker Compose forwards both variables. With Helm, put the non-secret `PUPPETEER_BROWSER_URL` in the chart's `env` map; put `PUPPETEER_BROWSER_WS_ENDPOINT` in an externally managed Secret referenced by `existingSecret`, not directly in Helm values. The Infrastructure page does not expose the CDP endpoint because a WebSocket endpoint can act as a bearer capability for the whole browser; configure it through a protected server environment or secret store. The browser must be reachable from the OpenWA process. When CDP connect mode is selected, OpenWA does not launch Chromium and does not create a separate LocalAuth profile; WhatsApp Web storage comes from the connected browser profile.
+Docker Compose forwards the browser endpoint and optional WebSocket headers. With Helm, put the non-secret `PUPPETEER_BROWSER_URL` in the chart's `env` map; put `PUPPETEER_BROWSER_WS_ENDPOINT` and `PUPPETEER_BROWSER_WS_HEADERS_JSON` in an externally managed Secret referenced by `existingSecret`, not directly in Helm values. The Infrastructure page does not expose the CDP endpoint because a WebSocket endpoint can act as a bearer capability for the whole browser; configure it through a protected server environment or secret store. The browser must be reachable from the OpenWA process. When CDP connect mode is selected, OpenWA does not launch Chromium and does not create a separate LocalAuth profile; WhatsApp Web storage comes from the connected browser profile.
 
 ### Browser setup and deployment topology
 
@@ -68,6 +68,4 @@ This mode is currently experimental. Verify the exact Chromium deployment and se
 
 ### Chrome on Android using Termux (same-phone, experimental)
 
-For a phone-only local setup, see [Chrome Android CDP from Termux](android-termux-cdp.md). The helper uses Android Wireless Debugging to forward Chrome's local DevTools socket to `127.0.0.1:9222`.
-
-This is **not** a remote bridge to a cloud-hosted OpenWA instance: the OpenWA process must run on the same phone for that loopback endpoint to work. A cloud deployment needs a separate authenticated reverse tunnel, which this helper does not provide. Puppeteer's Android Chrome support is experimental and requires a real-device compatibility test.
+For a phone-only setup, see [Chrome Android CDP from Termux](android-termux-cdp.md). The helper forwards Chrome's local DevTools socket to `127.0.0.1:9222`. It can also start a named Cloudflare Tunnel after the hostname is protected by a Cloudflare Access Service Auth policy, allowing a remote OpenWA host to connect using a `wss://` endpoint and service-token headers. Puppeteer's Android Chrome support is experimental and requires a real-device compatibility test.
