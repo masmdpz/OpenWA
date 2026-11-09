@@ -555,6 +555,7 @@ export class WwebjsLifecycle {
         : undefined;
     const browserWSEndpoint = this.host.config.puppeteer?.browserWSEndpoint?.trim();
     const browserURL = this.host.config.puppeteer?.browserURL?.trim();
+    const browserWsHeaders = this.host.config.puppeteer?.wsOptions?.headers;
     if (browserWSEndpoint && browserURL) {
       throw new Error('Configure only one of puppeteer.browserWSEndpoint or puppeteer.browserURL.');
     }
@@ -577,6 +578,7 @@ export class WwebjsLifecycle {
       ? {
           ...(browserWSEndpoint ? { browserWSEndpoint } : {}),
           ...(browserURL ? { browserURL } : {}),
+          ...(browserWSEndpoint && browserWsHeaders ? { wsOptions: { headers: browserWsHeaders } } : {}),
           ...(protocolTimeout !== undefined ? { protocolTimeout } : {}),
         }
       : {
@@ -652,8 +654,11 @@ export class WwebjsLifecycle {
       this.host.config.puppeteer?.browserURL?.trim(),
       this.host.config.puppeteer?.browserWSEndpoint?.trim(),
     ].filter((endpoint): endpoint is string => Boolean(endpoint));
-    return endpoints.reduce(
-      (safeMessage, endpoint) => safeMessage.split(endpoint).join('[redacted CDP endpoint]'),
+    const headerSecrets = Object.values(this.host.config.puppeteer?.wsOptions?.headers ?? {}).filter(
+      value => value.length >= 8,
+    );
+    return [...endpoints, ...headerSecrets].reduce(
+      (safeMessage, secret) => safeMessage.split(secret).join('[redacted CDP secret]'),
       message,
     );
   }
