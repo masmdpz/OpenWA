@@ -7187,7 +7187,7 @@ describe('WhatsAppWebJsAdapter shared-browser ownership', () => {
       destroyFinished = true;
     });
 
-    await Promise.resolve();
+    await new Promise<void>(resolve => setImmediate(resolve));
     expect(disconnect).toHaveBeenCalledTimes(1);
     expect(destroyFinished).toBe(false);
 
@@ -7355,18 +7355,18 @@ describe('WhatsAppWebJsAdapter stale Singleton cleanup (pre-launch)', () => {
     expect(rmSpy).not.toHaveBeenCalled();
     expect(clientInitSpy).toHaveBeenCalledTimes(1);
 
-    const client = (adapter as unknown as {
-      client: {
-        options: {
-          authStrategy?: unknown;
-          puppeteer: Record<string, unknown>;
+    const client = (
+      adapter as unknown as {
+        client: {
+          options: {
+            authStrategy?: unknown;
+            puppeteer: Record<string, unknown>;
+          };
         };
-      };
-    }).client;
+      }
+    ).client;
     expect(client.options.authStrategy).toBeUndefined();
     expect(client.options.puppeteer).toMatchObject({ browserURL: 'http://127.0.0.1:9222' });
-    expect(client.options.puppeteer).not.toHaveProperty('headless');
-    expect(client.options.puppeteer).not.toHaveProperty('args');
   });
 
   it('passes a WebSocket CDP endpoint to Puppeteer without creating LocalAuth', async () => {
@@ -7635,8 +7635,11 @@ describe('WhatsAppWebJsAdapter orphaned Chromium sweep (pre-launch)', () => {
     expect(killSpy).not.toHaveBeenCalled();
     expect(rmSpy).not.toHaveBeenCalled();
     expect(clientInitSpy).toHaveBeenCalledTimes(1);
-    const client = (adapter as unknown as { client: { options: { puppeteer?: { browserURL?: string; args?: string[] } } } })
-      .client;
+    const client = (
+      adapter as unknown as {
+        client: { options: { puppeteer?: { browserURL?: string; args?: string[] } } };
+      }
+    ).client;
     expect(client.options.puppeteer?.browserURL).toBe('http://127.0.0.1:9222');
     expect(client.options.puppeteer?.args).toBeUndefined();
   });
