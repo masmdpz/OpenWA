@@ -56,3 +56,10 @@ If OpenWA runs in Docker, a cloud container, or a Hugging Face Space while Chrom
 - The existing browser must be running with remote debugging enabled and must use the profile containing the desired WhatsApp Web login. A new tab is opened by whatsapp-web.js; the currently visible tab is not taken over.
 
 This mode is currently experimental. Verify the exact Chromium deployment and session behavior before using it for an important account.
+
+
+### Chrome on Android using Termux (same-phone, experimental)
+
+For a phone-only local setup, see [Chrome Android CDP from Termux](android-termux-cdp.md). The helper uses Android Wireless Debugging to forward Chrome's local DevTools socket to `127.0.0.1:9222`.
+
+This is **not** a remote bridge to a cloud-hosted OpenWA instance: the OpenWA process must run on the same phone for that loopback endpoint to work. A cloud deployment needs a separate authenticated reverse tunnel, which this helper does not provide. Puppeteer's Android Chrome support is experimental and requires a real-device compatibility test.
