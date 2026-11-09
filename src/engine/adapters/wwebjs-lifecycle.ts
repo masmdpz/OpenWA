@@ -596,7 +596,7 @@ export class WwebjsLifecycle {
         };
     const client = new Client({
       ...(authStrategy ? { authStrategy } : {}),
-      puppeteer: puppeteerOptions as unknown as NonNullable<ConstructorParameters<typeof Client>[0]['puppeteer']>,
+      puppeteer: puppeteerOptions,
       ...(authTimeoutMs !== undefined ? { authTimeoutMs } : {}),
       ...(proxyAuthentication ? { proxyAuthentication } : {}),
       ...(versionPin ?? { webVersionCache: { type: 'none' as const } }),
@@ -641,7 +641,10 @@ export class WwebjsLifecycle {
 
   /** Whether this adapter is attached to an operator-owned browser via CDP. */
   private isConnectedBrowserConfigured(): boolean {
-    return Boolean(this.host.config.puppeteer?.browserURL?.trim() || this.host.config.puppeteer?.browserWSEndpoint?.trim());
+    return Boolean(
+      this.host.config.puppeteer?.browserURL?.trim() ||
+        this.host.config.puppeteer?.browserWSEndpoint?.trim(),
+    );
   }
 
   /** Remove a configured CDP endpoint from error text before it reaches logs or API responses. */
