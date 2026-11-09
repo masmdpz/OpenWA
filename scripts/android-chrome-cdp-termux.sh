@@ -33,7 +33,7 @@ valid_port "$CONNECT_PORT" || fail "Invalid connection port."
 printf '\nConnecting to this phone...\n'
 adb connect "127.0.0.1:$CONNECT_PORT" || fail "ADB connection failed. Check that Wireless debugging is still enabled."
 
-printf '\nForwarding Chrome DevTools Protocol to localhost:$CDP_PORT...\n'
+printf "\nForwarding Chrome DevTools Protocol to localhost:%s...\\n" "$CDP_PORT"
 adb forward --remove "tcp:$CDP_PORT" >/dev/null 2>&1 || true
 adb forward "tcp:$CDP_PORT" localabstract:chrome_devtools_remote || fail "Could not forward Chrome's DevTools socket."
 
