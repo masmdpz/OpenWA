@@ -24,7 +24,7 @@ read -r -s -p "6-digit pairing code: " PAIR_CODE
 printf '\n'
 [[ "$PAIR_CODE" =~ ^[0-9]{6}$ ]] || fail "Pairing code must contain exactly six digits."
 
-printf '\nPairing this phone's local ADB service...\n'
+printf '\nPairing the local ADB service...\n'
 adb pair "127.0.0.1:$PAIR_PORT" "$PAIR_CODE" || fail "ADB pairing failed. Re-open the pairing-code dialog and try again."
 
 read -r -p "Connection port shown on the main Wireless debugging screen: " CONNECT_PORT
