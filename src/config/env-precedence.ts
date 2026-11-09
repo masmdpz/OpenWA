@@ -118,6 +118,8 @@ export const BLANK_SHADOWED_ENV_KEYS: string[] = [
   // dashboard edit is not shadowed by a pinned container default; the app layer (configuration.ts)
   // supplies the sane default when nothing is set.
   'PUPPETEER_HEADLESS',
+  'PUPPETEER_BROWSER_URL',
+  'PUPPETEER_BROWSER_WS_ENDPOINT',
   'SESSION_DATA_PATH',
   'PUPPETEER_ARGS',
   'PUPPETEER_PROTOCOL_TIMEOUT_MS',
