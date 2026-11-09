@@ -7145,7 +7145,10 @@ describe('WhatsAppWebJsAdapter shared-browser ownership', () => {
     const adapter = new WhatsAppWebJsAdapter({
       sessionId: 'sess-shared-redaction',
       sessionDataPath: './data/sessions',
-      puppeteer: { browserWSEndpoint: endpoint },
+      puppeteer: {
+        browserWSEndpoint: endpoint,
+        wsOptions: { headers: { 'CF-Access-Client-Secret': 'super-secret-token-value' } },
+      },
     });
     const client = new Client({});
     let finishDisconnect: () => void = () => undefined;
@@ -7178,7 +7181,10 @@ describe('WhatsAppWebJsAdapter shared-browser ownership', () => {
     ).lifecycle;
 
     expect(lifecycle.redactConnectedBrowserEndpoint(`Unable to connect to ${endpoint}`)).toBe(
-      'Unable to connect to [redacted CDP endpoint]',
+      'Unable to connect to [redacted CDP secret]',
+    );
+    expect(lifecycle.redactConnectedBrowserEndpoint('Access denied: super-secret-token-value')).toBe(
+      'Access denied: [redacted CDP secret]',
     );
 
     lifecycle.preserveConnectedBrowserOwnership(client);
