@@ -56,6 +56,7 @@ export class WhatsAppWebJsPlugin implements IEnginePlugin {
         protocolTimeoutMs?: number;
         browserWSEndpoint?: string;
         browserURL?: string;
+        wsOptions?: { headers?: Record<string, string> };
       };
     };
     const puppeteer = engineConfig.puppeteer ?? {};
@@ -69,6 +70,7 @@ export class WhatsAppWebJsPlugin implements IEnginePlugin {
     const protocolTimeoutMs = puppeteer.protocolTimeoutMs;
     const browserWSEndpoint = puppeteer.browserWSEndpoint;
     const browserURL = puppeteer.browserURL;
+    const wsOptions = puppeteer.wsOptions;
 
     return new WhatsAppWebJsAdapter({
       sessionId,
@@ -80,6 +82,7 @@ export class WhatsAppWebJsPlugin implements IEnginePlugin {
         protocolTimeoutMs,
         ...(browserWSEndpoint ? { browserWSEndpoint } : {}),
         ...(browserURL ? { browserURL } : {}),
+        ...(wsOptions ? { wsOptions } : {}),
       },
       proxy: proxyUrl
         ? {
