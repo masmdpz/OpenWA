@@ -7354,6 +7354,42 @@ describe('WhatsAppWebJsAdapter stale Singleton cleanup (pre-launch)', () => {
 
     expect(rmSpy).not.toHaveBeenCalled();
     expect(clientInitSpy).toHaveBeenCalledTimes(1);
+
+    const client = (adapter as unknown as {
+      client: {
+        options: {
+          authStrategy?: unknown;
+          puppeteer: Record<string, unknown>;
+        };
+      };
+    }).client;
+    expect(client.options.authStrategy).toBeUndefined();
+    expect(client.options.puppeteer).toMatchObject({ browserURL: 'http://127.0.0.1:9222' });
+    expect(client.options.puppeteer).not.toHaveProperty('headless');
+    expect(client.options.puppeteer).not.toHaveProperty('args');
+  });
+
+  it('passes a WebSocket CDP endpoint to Puppeteer without creating LocalAuth', async () => {
+    const endpoint = 'ws://127.0.0.1:9222/devtools/browser/test-id';
+    const adapter = new WhatsAppWebJsAdapter({
+      sessionId: SESSION_ID,
+      sessionDataPath: './data/sessions',
+      puppeteer: { browserWSEndpoint: endpoint },
+    });
+
+    await adapter.initialize({});
+
+    const client = (adapter as unknown as {
+      client: {
+        options: {
+          authStrategy?: unknown;
+          puppeteer: Record<string, unknown>;
+        };
+      };
+    }).client;
+    expect(client.options.authStrategy).toBeUndefined();
+    expect(client.options.puppeteer).toMatchObject({ browserWSEndpoint: endpoint });
+    expect(rmSpy).not.toHaveBeenCalled();
   });
 });
 
