@@ -7379,14 +7379,16 @@ describe('WhatsAppWebJsAdapter stale Singleton cleanup (pre-launch)', () => {
 
     await adapter.initialize({});
 
-    const client = (adapter as unknown as {
-      client: {
-        options: {
-          authStrategy?: unknown;
-          puppeteer: Record<string, unknown>;
+    const client = (
+      adapter as unknown as {
+        client: {
+          options: {
+            authStrategy?: unknown;
+            puppeteer: Record<string, unknown>;
+          };
         };
-      };
-    }).client;
+      }
+    ).client;
     expect(client.options.authStrategy).toBeUndefined();
     expect(client.options.puppeteer).toMatchObject({ browserWSEndpoint: endpoint });
     expect(rmSpy).not.toHaveBeenCalled();
