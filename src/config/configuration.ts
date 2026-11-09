@@ -255,6 +255,18 @@ export default () => ({
       // CDP connect mode borrows an operator-owned browser/profile; use exactly one endpoint.
       browserURL: process.env.PUPPETEER_BROWSER_URL?.trim() || undefined,
       browserWSEndpoint: process.env.PUPPETEER_BROWSER_WS_ENDPOINT?.trim() || undefined,
+      // Optional headers for authenticated CDP WebSocket gateways (for example Cloudflare Access).
+      // The value is parsed only after validateEnv has checked that it is a string-only JSON object.
+      wsOptions: (() => {
+        const rawHeaders = process.env.PUPPETEER_BROWSER_WS_HEADERS_JSON?.trim();
+        if (!rawHeaders) return undefined;
+        try {
+          const headers = JSON.parse(rawHeaders) as Record<string, string>;
+          return { headers };
+        } catch {
+          return undefined;
+        }
+      })(),
     },
     sessionDataPath: process.env.SESSION_DATA_PATH || './data/sessions',
     // Baileys engine (used when ENGINE_TYPE=baileys). Multi-file auth state base dir; each session
