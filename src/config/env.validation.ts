@@ -179,6 +179,35 @@ export function validateEnv(config: EnvConfig): EnvConfig {
   };
   checkEndpointProtocol('PUPPETEER_BROWSER_URL', browserURL, ['http:', 'https:']);
   checkEndpointProtocol('PUPPETEER_BROWSER_WS_ENDPOINT', browserWSEndpoint, ['ws:', 'wss:']);
+  const browserWsHeadersJson = str('PUPPETEER_BROWSER_WS_HEADERS_JSON');
+  if (browserWsHeadersJson) {
+    if (!browserWSEndpoint) {
+      errors.push('PUPPETEER_BROWSER_WS_HEADERS_JSON requires PUPPETEER_BROWSER_WS_ENDPOINT');
+    } else if (!browserWSEndpoint.toLowerCase().startsWith('wss://')) {
+      errors.push('PUPPETEER_BROWSER_WS_HEADERS_JSON requires a secure wss:// browser endpoint');
+    }
+    try {
+      const headers: unknown = JSON.parse(browserWsHeadersJson);
+      const validHeaderName = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/;
+      const reservedHeaders = /^(host|connection|content-length|upgrade|sec-websocket-)/i;
+      if (
+        headers === null ||
+        typeof headers !== 'object' ||
+        Array.isArray(headers) ||
+        Object.entries(headers).some(
+          ([name, value]) =>
+            !validHeaderName.test(name) ||
+            reservedHeaders.test(name) ||
+            typeof value !== 'string' ||
+            /[\r\n]/.test(value),
+        )
+      ) {
+        errors.push('PUPPETEER_BROWSER_WS_HEADERS_JSON must be a JSON object of safe header names and string values');
+      }
+    } catch {
+      errors.push('PUPPETEER_BROWSER_WS_HEADERS_JSON must be valid JSON');
+    }
+  }
   checkEnum('MESSAGE_INLINE_MEDIA', ['inline', 'archive']);
   // 'archive' drops the inline copy only after the archiver stored the file; with the archiver off
   // nothing is ever stored, so the mode would silently do nothing. Refuse that rather than let an
