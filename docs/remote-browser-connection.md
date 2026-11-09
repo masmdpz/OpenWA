@@ -24,6 +24,15 @@ Or use a WebSocket endpoint:
 }
 ```
 
+For an authenticated remote WebSocket gateway such as a Cloudflare Access-protected hostname, use a secure `wss://` endpoint and provide the handshake headers separately:
+
+```dotenv
+PUPPETEER_BROWSER_WS_ENDPOINT=wss://cdp.example.com/devtools/browser/REPLACE_WITH_BROWSER_ID
+PUPPETEER_BROWSER_WS_HEADERS_JSON={\"CF-Access-Client-Id\":\"<service-token-id>\",\"CF-Access-Client-Secret\":\"<service-token-secret>\"}
+```
+
+The header variable must be a JSON object containing header names and string values. Store it in the OpenWA host's secret manager, not in a committed file. Headers are used only for the CDP WebSocket handshake; `PUPPETEER_BROWSER_URL` does not support this header mode.
+
 For environment-based deployments, set exactly one of:
 
 ```dotenv
@@ -49,14 +58,13 @@ If OpenWA runs in Docker, a cloud container, or a Hugging Face Space while Chrom
 ## Important limitations
 
 - This connects to a browser on a machine/container that OpenWA can reach. It does not import a pairing code from a separate phone browser.
-- Do not expose an unauthenticated CDP endpoint to the public internet. CDP grants control over the browser and its logged-in sessions. Keep it bound to loopback or behind a properly authenticated private network.
+- Do not expose an unauthenticated CDP endpoint to the public internet. CDP grants control over the browser and its logged-in sessions. Keep it bound to loopback or behind a properly authenticated private network such as Cloudflare Access Service Auth.
 - Configure proxy/network settings on the connected browser itself. Per-session OpenWA proxy settings are not supported in this mode.
 - OpenWA disconnect closes the page it created and detaches from CDP; it must not close the shared browser.
 - Logout is disabled in shared-browser mode to protect the browser owner. Unlink the companion from WhatsApp's Linked Devices screen instead.
 - The existing browser must be running with remote debugging enabled and must use the profile containing the desired WhatsApp Web login. A new tab is opened by whatsapp-web.js; the currently visible tab is not taken over.
 
 This mode is currently experimental. Verify the exact Chromium deployment and session behavior before using it for an important account.
-
 
 ### Chrome on Android using Termux (same-phone, experimental)
 
