@@ -7147,7 +7147,7 @@ describe('WhatsAppWebJsAdapter shared-browser ownership', () => {
       sessionDataPath: './data/sessions',
       puppeteer: { browserWSEndpoint: endpoint },
     });
-    const client = new Client();
+    const client = new Client({});
     let finishDisconnect: () => void = () => undefined;
     const disconnect = jest.fn(
       () =>
@@ -7203,7 +7203,7 @@ describe('WhatsAppWebJsAdapter shared-browser ownership', () => {
       sessionDataPath: './data/sessions',
       puppeteer: { browserURL: 'http://127.0.0.1:9222' },
     });
-    const client = new Client();
+    const client = new Client({});
     const kill = jest.fn();
     const process = jest.fn().mockReturnValue({ kill });
     const page = {
@@ -7246,7 +7246,7 @@ describe('WhatsAppWebJsAdapter shared-browser ownership', () => {
       sessionDataPath: './data/sessions',
       puppeteer: { browserURL: 'http://127.0.0.1:9222' },
     });
-    const client = new Client();
+    const client = new Client({});
     const page = {
       isClosed: jest.fn().mockReturnValue(false),
       close: jest.fn().mockResolvedValue(undefined),
