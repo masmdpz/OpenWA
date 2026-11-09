@@ -27,6 +27,7 @@ describe('WhatsAppWebJsPlugin.createEngine (opaque config)', () => {
         executablePath: '/usr/bin/chromium',
         protocolTimeoutMs: 300_000,
         browserURL: 'http://127.0.0.1:9222',
+        wsOptions: { headers: { 'CF-Access-Client-Id': 'service-id' } },
       },
     });
 
@@ -44,6 +45,7 @@ describe('WhatsAppWebJsPlugin.createEngine (opaque config)', () => {
           executablePath: '/usr/bin/chromium',
           protocolTimeoutMs: 300_000,
           browserURL: 'http://127.0.0.1:9222',
+          wsOptions: { headers: { 'CF-Access-Client-Id': 'service-id' } },
         },
         proxy: { url: 'http://p', type: 'http' },
       }),
