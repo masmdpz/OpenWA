@@ -125,6 +125,34 @@ describe('validateEnv', () => {
       /PUPPETEER_BROWSER_WS_ENDPOINT/,
     );
     expect(() => validateEnv({ PUPPETEER_BROWSER_URL: 'not-a-url' })).toThrow(/PUPPETEER_BROWSER_URL/);
+    expect(() =>
+      validateEnv({
+        PUPPETEER_BROWSER_WS_ENDPOINT: 'wss://cdp.example.com/devtools/browser/id',
+        PUPPETEER_BROWSER_WS_HEADERS_JSON:
+          '{"CF-Access-Client-Id":"service-id","CF-Access-Client-Secret":"service-secret"}',
+      }),
+    ).not.toThrow();
+    expect(() =>
+      validateEnv({ PUPPETEER_BROWSER_WS_HEADERS_JSON: '{"Authorization":"secret"}' }),
+    ).toThrow(/requires PUPPETEER_BROWSER_WS_ENDPOINT/);
+    expect(() =>
+      validateEnv({
+        PUPPETEER_BROWSER_WS_ENDPOINT: 'ws://cdp.example.com/devtools/browser/id',
+        PUPPETEER_BROWSER_WS_HEADERS_JSON: '{"Authorization":"secret"}',
+      }),
+    ).toThrow(/secure wss/);
+    expect(() =>
+      validateEnv({
+        PUPPETEER_BROWSER_WS_ENDPOINT: 'wss://cdp.example.com/devtools/browser/id',
+        PUPPETEER_BROWSER_WS_HEADERS_JSON: '{"Host":"attacker.example"}',
+      }),
+    ).toThrow(/safe header names/);
+    expect(() =>
+      validateEnv({
+        PUPPETEER_BROWSER_WS_ENDPOINT: 'wss://cdp.example.com/devtools/browser/id',
+        PUPPETEER_BROWSER_WS_HEADERS_JSON: 'not-json',
+      }),
+    ).toThrow(/must be valid JSON/);
   });
 
   it('rejects a STORAGE_TYPE typo instead of silently falling back to local', () => {
