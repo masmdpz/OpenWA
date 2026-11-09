@@ -76,6 +76,7 @@ services:
       # Optional shared-browser connection. Exactly one may be set; keep CDP private.
       - PUPPETEER_BROWSER_URL=${PUPPETEER_BROWSER_URL:-}
       - PUPPETEER_BROWSER_WS_ENDPOINT=${PUPPETEER_BROWSER_WS_ENDPOINT:-}
+      - PUPPETEER_BROWSER_WS_HEADERS_JSON=${PUPPETEER_BROWSER_WS_HEADERS_JSON:-}
       # Optional WhatsApp Web version override. DEFAULT (empty, "latest", or "auto"): OpenWA auto-resolves a
       # settled build from the third-party wppconnect-team/wa-version registry and pins its remote HTML
       # (fetched into the web.whatsapp.com origin without an integrity check). Set "off" to disable pinning
