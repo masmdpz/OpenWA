@@ -164,7 +164,10 @@ cmd_backup() {
   info "Membuat arsip rootfs beserta data sesi. Pastikan ruang penyimpanan cukup."
   proot-distro backup "$APP_NAME" --output "$backup_file" --compress xz
   chmod 600 "$backup_file"
-  info "Backup tersimpan di: $backup_file"
+  cp "$KEY_FILE" "${backup_file%.tar.xz}-api-master-key.txt"
+  chmod 600 "${backup_file%.tar.xz}-api-master-key.txt"
+  info "Backup container: $backup_file"
+  info "Salinan API key: ${backup_file%.tar.xz}-api-master-key.txt"
 }
 
 usage() {
