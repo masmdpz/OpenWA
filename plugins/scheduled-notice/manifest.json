@@ -1,0 +1,49 @@
+{
+  "id": "scheduled-notice",
+  "name": "Scheduled Notice",
+  "version": "1.0.0",
+  "type": "extension",
+  "description": "Send one operator-authored, clearly labelled WhatsApp notice at a specified time.",
+  "author": "OpenWA Community",
+  "license": "MIT",
+  "main": "index.cjs",
+  "permissions": ["messages:send", "storage:use"],
+  "sessions": ["*"],
+  "sessionScoped": true,
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "enabled": {
+        "type": "boolean",
+        "title": "Enable scheduled notice",
+        "description": "When enabled, sends the configured notice once at the selected time.",
+        "default": false
+      },
+      "sessionId": {
+        "type": "string",
+        "title": "Sender session ID",
+        "description": "The OpenWA session that sends the message. Activate this plugin for that session.",
+        "required": true
+      },
+      "chatId": {
+        "type": "string",
+        "title": "Recipient chat ID",
+        "description": "WhatsApp chat ID, for example 6281234567890@c.us.",
+        "required": true
+      },
+      "sendAt": {
+        "type": "string",
+        "title": "Send time (ISO 8601)",
+        "description": "Include a timezone offset, e.g. 2026-11-11T09:00:00+07:00.",
+        "required": true
+      },
+      "message": {
+        "type": "textarea",
+        "title": "Message",
+        "description": "Write the notice yourself. The plugin adds an automated-message label.",
+        "required": true,
+        "max": 4000
+      }
+    }
+  }
+}
