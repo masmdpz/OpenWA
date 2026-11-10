@@ -416,6 +416,16 @@ jobs:
       - name: actionlint
         run: docker run --rm -v "$PWD:/repo:ro" -w /repo rhysd/actionlint:1.7.12 -color
 
+  termux-image-pull:
+    name: Termux image pull (anonymous)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # No docker login is performed here: this deliberately proves the phone installer can pull
+      # the published ARM64 image without requiring the user's GitHub credentials.
+      - name: Pull the pinned ARM64 image anonymously
+        run: docker pull --platform linux/arm64 ghcr.io/masmdpz/openwa:7f8d3fb
+
   build:
     name: Build
     runs-on: ubuntu-latest
