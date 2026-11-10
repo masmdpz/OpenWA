@@ -3,7 +3,7 @@
 # No root, Docker, VPS, or paid hosting required.
 set -Eeuo pipefail
 
-if [[ -z "\${TERMUX_VERSION:-}" || -z "\${PREFIX:-}" ]]; then
+if [[ -z "${TERMUX_VERSION:-}" || -z "${PREFIX:-}" ]]; then
   echo "Run this script inside the official Termux app." >&2
   exit 1
 fi
@@ -35,21 +35,21 @@ apt-get install -y --no-install-recommends \
   ca-certificates curl git xz-utils python3 build-essential pkg-config patch ffmpeg
 
 NODE_VERSION="24.22.2"
-NODE_ARCHIVE="node-v\${NODE_VERSION}-linux-arm64.tar.xz"
-NODE_DIR="/opt/node-v\${NODE_VERSION}-linux-arm64"
+NODE_ARCHIVE="node-v${NODE_VERSION}-linux-arm64.tar.xz"
+NODE_DIR="/opt/node-v${NODE_VERSION}-linux-arm64"
 
-if [[ ! -x "\${NODE_DIR}/bin/node" ]]; then
+if [[ ! -x "${NODE_DIR}/bin/node" ]]; then
   cd /tmp
-  curl -fSLO "https://nodejs.org/dist/v\${NODE_VERSION}/SHASUMS256.txt"
-  curl -fSLO "https://nodejs.org/dist/v\${NODE_VERSION}/\${NODE_ARCHIVE}"
-  grep " \${NODE_ARCHIVE}\$" SHASUMS256.txt | sha256sum -c -
-  tar -xJf "\${NODE_ARCHIVE}" -C /opt
-  rm -f "\${NODE_ARCHIVE}" SHASUMS256.txt
+  curl -fSLO "https://nodejs.org/dist/v${NODE_VERSION}/SHASUMS256.txt"
+  curl -fSLO "https://nodejs.org/dist/v${NODE_VERSION}/${NODE_ARCHIVE}"
+  grep " ${NODE_ARCHIVE}\$" SHASUMS256.txt | sha256sum -c -
+  tar -xJf "${NODE_ARCHIVE}" -C /opt
+  rm -f "${NODE_ARCHIVE}" SHASUMS256.txt
 fi
 
-ln -sfn "\${NODE_DIR}/bin/node" /usr/local/bin/node
-ln -sfn "\${NODE_DIR}/bin/npm" /usr/local/bin/npm
-ln -sfn "\${NODE_DIR}/bin/npx" /usr/local/bin/npx
+ln -sfn "${NODE_DIR}/bin/node" /usr/local/bin/node
+ln -sfn "${NODE_DIR}/bin/npm" /usr/local/bin/npm
+ln -sfn "${NODE_DIR}/bin/npx" /usr/local/bin/npx
 
 node --version
 npm --version
@@ -90,22 +90,22 @@ chmod 755 /usr/local/bin/openwa-start
 DEBIAN_SETUP
 
 echo "[4/4] Creating Termux commands..."
-cat > "\${PREFIX}/bin/openwa" <<'OPENWA_CMD'
+cat > "${PREFIX}/bin/openwa" <<'OPENWA_CMD'
 #!/data/data/com.termux/files/usr/bin/bash
 exec proot-distro login debian -- /usr/local/bin/openwa-start
 OPENWA_CMD
 
-cat > "\${PREFIX}/bin/openwa-tunnel" <<'TUNNEL_CMD'
+cat > "${PREFIX}/bin/openwa-tunnel" <<'TUNNEL_CMD'
 #!/data/data/com.termux/files/usr/bin/bash
 exec cloudflared tunnel --url http://127.0.0.1:2785
 TUNNEL_CMD
 
-cat > "\${PREFIX}/bin/openwa-key" <<'KEY_CMD'
+cat > "${PREFIX}/bin/openwa-key" <<'KEY_CMD'
 #!/data/data/com.termux/files/usr/bin/bash
 exec proot-distro login debian -- cat /opt/openwa/data/.api-key
 KEY_CMD
 
-cat > "\${PREFIX}/bin/openwa-update" <<'UPDATE_CMD'
+cat > "${PREFIX}/bin/openwa-update" <<'UPDATE_CMD'
 #!/data/data/com.termux/files/usr/bin/bash
 set -e
 proot-distro login debian -- bash -lc '
@@ -118,8 +118,8 @@ proot-distro login debian -- bash -lc '
 '
 UPDATE_CMD
 
-chmod 755 "\${PREFIX}/bin/openwa" "\${PREFIX}/bin/openwa-tunnel" \
-  "\${PREFIX}/bin/openwa-key" "\${PREFIX}/bin/openwa-update"
+chmod 755 "${PREFIX}/bin/openwa" "${PREFIX}/bin/openwa-tunnel" \
+  "${PREFIX}/bin/openwa-key" "${PREFIX}/bin/openwa-update"
 
 cat <<'DONE'
 
