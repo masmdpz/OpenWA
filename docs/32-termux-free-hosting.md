@@ -26,8 +26,7 @@ This is a **self-hosted, no-monthly-fee** option for an ARM64 Android phone when
 Install Termux from one official distribution source and keep any Termux add-ons from that same source. Open Termux and run:
 
 ```bash
-pkg update -y
-pkg install -y curl
+apt update && apt full-upgrade -y
 curl -fsSL https://raw.githubusercontent.com/masmdpz/OpenWA/main/scripts/install-termux.sh -o install-openwa.sh
 bash install-openwa.sh
 ```
