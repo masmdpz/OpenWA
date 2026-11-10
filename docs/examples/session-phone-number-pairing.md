@@ -4,6 +4,8 @@ OpenWA supports linking an existing WhatsApp account to a session by phone numbe
 
 This flow returns an 8-character pairing code that the user enters in WhatsApp on their phone.
 
+**Recommended engine: Baileys.** OpenWA defaults to Baileys so phone-number pairing does not depend on Chromium. The `whatsapp-web.js` engine has a documented risk: requesting a code for an account with an existing linked device can cause WhatsApp to revoke that device. If an existing deployment has a saved `ENGINE_TYPE`, select **Baileys** under Infrastructure → Engine and restart before requesting a code.
+
 > This does **not** create or register a new WhatsApp account. It only links an existing WhatsApp account as a companion device for an OpenWA session.
 
 > **On the whatsapp-web.js engine, request a code only for a number you are prepared to re-link.** A pairing request for a number that already has a linked session has been observed to end with WhatsApp revoking that device: within about a minute the linked session logs `WhatsApp unlinked this device (LOGOUT)`, its stored credentials are deleted, and it returns to `qr_ready` with no phone. The request runs inside the shared WhatsApp Web page and resets its linking mode before it asks for a code, so the blast radius is the account, not the session. The gateway answers `409` for a number that is the stored phone of another of its sessions, but it cannot see a link made on another gateway or only on the phone. Baileys has no such page, was not affected in the same tests and is not refused. If a session of that number must stay up, link the new one by QR.
