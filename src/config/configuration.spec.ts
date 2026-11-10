@@ -480,7 +480,6 @@ describe('configuration — puppeteer locale pin', () => {
   });
 });
 
-
 describe('configuration — WhatsApp engine default', () => {
   const original = process.env.ENGINE_TYPE;
 
