@@ -4,7 +4,7 @@ OpenWA supports linking an existing WhatsApp account to a session by phone numbe
 
 This flow returns an 8-character pairing code that the user enters in WhatsApp on their phone.
 
-**Recommended engine: Baileys.** OpenWA defaults to Baileys so phone-number pairing does not depend on Chromium. The `whatsapp-web.js` engine has a documented risk: requesting a code for an account with an existing linked device can cause WhatsApp to revoke that device. If an existing deployment has a saved `ENGINE_TYPE`, select **Baileys** under Infrastructure → Engine and restart before requesting a code.
+**Recommended engine for this specific pairing scenario: Baileys, when preserving an already-linked companion device is the priority.** The `whatsapp-web.js` engine has a documented risk: requesting a code for an account with an existing linked device can cause WhatsApp to revoke that device. Baileys did not show that behavior in the documented tests. **This does not mean Baileys is safer overall:** the risk guidance in the README rates Baileys as having a higher account-restriction risk than `whatsapp-web.js`. If minimizing account-restriction risk is the priority, follow the README's guidance and prefer `whatsapp-web.js`, but do not request a pairing code for a number with an existing linked device; use QR linking instead. If an existing deployment has a saved `ENGINE_TYPE`, select **Baileys** under Infrastructure → Engine and restart before requesting a pairing code.
 
 > This does **not** create or register a new WhatsApp account. It only links an existing WhatsApp account as a companion device for an OpenWA session.
 
