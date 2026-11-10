@@ -63,8 +63,8 @@ flowchart LR
 
 Key adapter facts:
 
-- **Engine is selected once per deployment** by `ENGINE_TYPE` (`whatsapp-web.js` is the default,
-  `baileys` the browser-free alternative); every session on the gateway runs the same engine, and
+- **Engine is selected once per deployment** by `ENGINE_TYPE` (`baileys` is the default,
+  `whatsapp-web.js` is the browser-based alternative); every session on the gateway runs the same engine, and
   switching engines needs a restart.
   The REST surface is identical for both; availability differences surface only as 501s, which the
   matrix in 29.4 enumerates.
