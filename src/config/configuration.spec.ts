@@ -479,3 +479,22 @@ describe('configuration — puppeteer locale pin', () => {
     expect(configuration().engine.puppeteer.args).toEqual(['--no-sandbox', '--lang=id-ID']);
   });
 });
+
+describe('configuration — WhatsApp engine default', () => {
+  const original = process.env.ENGINE_TYPE;
+
+  afterEach(() => {
+    if (original === undefined) delete process.env.ENGINE_TYPE;
+    else process.env.ENGINE_TYPE = original;
+  });
+
+  it('defaults to Baileys for phone-number pairing', () => {
+    delete process.env.ENGINE_TYPE;
+    expect(configuration().engine.type).toBe('baileys');
+  });
+
+  it('honors an explicitly pinned engine', () => {
+    process.env.ENGINE_TYPE = 'whatsapp-web.js';
+    expect(configuration().engine.type).toBe('whatsapp-web.js');
+  });
+});

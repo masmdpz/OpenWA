@@ -458,7 +458,7 @@ LOG_FORMAT=json
 # ===========================================
 # WHATSAPP ENGINE
 # ===========================================
-# ENGINE_TYPE=baileys   # whatsapp-web.js (default) | baileys; omit to use the dashboard selection
+# ENGINE_TYPE=baileys   # baileys (default) | whatsapp-web.js; omit to use the dashboard selection
 
 # Session
 # SESSION_DATA_PATH=./data/sessions
@@ -568,7 +568,7 @@ export default () => ({
   // key, and the top-level `session` (ownership leases) and `sessions` (concurrency cap) blocks do
   // not hold the data path.
   engine: {
-    type: process.env.ENGINE_TYPE || 'whatsapp-web.js',
+    type: process.env.ENGINE_TYPE || 'baileys',
     sessionDataPath: process.env.SESSION_DATA_PATH || './data/sessions',
     puppeteer: {
       executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
