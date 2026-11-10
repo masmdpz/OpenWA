@@ -499,7 +499,6 @@ test('a built-in flag beside a pinned host is sent with a selection the form cha
   assert.deepEqual([database?.builtIn, redis?.builtIn, storage?.builtIn], [true, true, true]);
 });
 
-
 test('defaults the engine selection to Baileys for phone-number pairing', () => {
   const { result } = renderForm({});
   assert.equal(result.current.engineConfig.type, 'baileys');
