@@ -142,7 +142,7 @@ services:
       - DATABASE_SSL_REJECT_UNAUTHORIZED=${DATABASE_SSL_REJECT_UNAUTHORIZED:-}
       - DATABASE_SYNCHRONIZE=${DATABASE_SYNCHRONIZE:-false}
       # Engine. Forwarded empty by default so the dashboard (Infrastructure > Engine) selects the
-      # active engine via data/.env.generated (defaults to whatsapp-web.js); main.ts treats a blank
+      # active engine via data/.env.generated (defaults to baileys); main.ts treats a blank
       # ENGINE_TYPE as unset, so .env.generated wins. Set ENGINE_TYPE in your .env/host to pin an
       # engine (e.g. baileys) — a real value flows through here and keeps top precedence.
       - ENGINE_TYPE=${ENGINE_TYPE:-}
