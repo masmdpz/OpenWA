@@ -16,9 +16,12 @@ case "$(uname -m)" in
     ;;
 esac
 
-echo "[1/4] Installing Termux tools..."
-pkg update -y
-pkg install -y proot-distro git curl cloudflared
+echo "[1/4] Updating Termux completely, then installing tools..."
+# Termux is rolling-release: partial upgrades can leave curl/libcurl linked to an older OpenSSL.
+# Use apt directly for the full upgrade because pkg itself relies on curl.
+apt update
+apt full-upgrade -y
+pkg install -y proot-distro git cloudflared
 
 echo "[2/4] Preparing Debian..."
 if ! proot-distro login debian -- /bin/true >/dev/null 2>&1; then
