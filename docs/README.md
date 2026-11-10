@@ -63,7 +63,7 @@
 | 29  | [Engine Capability Matrix](./29-engine-capability-matrix.md)             | Per-engine capability support, gaps, and roadmap                                   |
 | 30  | [Plugin Sandboxing](./30-plugin-sandboxing.md)                           | Worker isolation, capabilities, and plugin limits                                  |
 | 31  | [Session Lifecycle: Invariant Catalog](./31-session-lifecycle-design.md) | The race windows the lifecycle defends, where each is defended, which spec pins it |
-| 32  | [Free Android Hosting (Termux)](./32-termux-free-hosting.md) | Self-host OpenWA on an ARM64 Android phone without paid hosting |
+| 32  | [Free Android Hosting (Termux)](./32-termux-free-hosting.md)             | Self-host OpenWA on an ARM64 Android phone without paid hosting                    |
 
 **Examples**
 

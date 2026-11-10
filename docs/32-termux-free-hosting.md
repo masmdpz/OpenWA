@@ -33,8 +33,8 @@ bash install-openwa.sh
 
 The installer adds these Termux commands:
 
-| Command       | Purpose                                                      |
-| ------------- | ------------------------------------------------------------ |
+| Command         | Purpose                                                      |
+| --------------- | ------------------------------------------------------------ |
 | `openwa`        | Starts the OpenWA API and dashboard                          |
 | `openwa-tunnel` | Creates a temporary HTTPS URL                                |
 | `openwa-key`    | Prints the generated admin API key                           |
