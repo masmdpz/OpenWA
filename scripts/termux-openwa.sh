@@ -8,12 +8,12 @@ readonly KEY_FILE="${CONFIG_DIR}/api-master-key"
 readonly HEALTH_URL="http://127.0.0.1:2785/api/health/ready"
 
 fail() {
-  printf 'ERROR: %s\\n' "$*" >&2
+  printf 'ERROR: %s\n' "$*" >&2
   exit 1
 }
 
 info() {
-  printf '[OpenWA] %s\\n' "$*"
+  printf '[OpenWA] %s\n' "$*"
 }
 
 require_termux() {
@@ -138,7 +138,7 @@ cmd_key() {
   require_termux
   [[ -s "$KEY_FILE" ]] || fail "API key belum dibuat. Jalankan: $0 install"
   cat "$KEY_FILE"
-  printf '\\n'
+  printf '\n'
 }
 
 cmd_tunnel() {
